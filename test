@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>موقع شطرنج - chess.wintrcat.uk</title>
+  <!-- ربط خط من جوجل لتحسين الخطوط -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo&display=swap" rel="stylesheet">
+  <!-- تضمين jQuery -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <!-- تضمين مكتبة chess.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.12.0/chess.min.js"></script>
+  <!-- تضمين مكتبة chessboard.js -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/chessboard-1.0.0.min.js"></script>
+  <style>
+    /* تنسيق عام وعصري */
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Cairo', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to bottom right, #1e3c72, #2a5298);
+      color: #fff;
+      direction: rtl;
+      overflow-x: hidden;
+    }
+    header {
+      background: rgba(0, 0, 0, 0.7);
+      padding: 20px;
+      text-align: center;
+      font-size: 2em;
+      letter-spacing: 1px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    }
+    main {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 30px 20px;
+    }
+    #boardContainer {
+      margin: 20px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    #board {
+      width: 400px;
+    }
+    #controls {
+      margin: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    #controls button, #controls select {
+      margin: 10px;
+      padding: 12px 20px;
+      font-size: 1em;
+      background: #fff;
+      color: #333;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+    }
+    #controls button:hover, #controls select:hover {
+      transform: scale(1.05);
+      background: #f0f0f0;
+    }
+    #analysisPanel {
+      width: 90%;
+      max-width: 800px;
+      background: rgba(255, 255, 255, 0.15);
+      margin: 20px auto;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    #analysisPanel h2 {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    #analysisPanel textarea {
+      width: 100%;
+      height: 120px;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      font-size: 1em;
+      resize: vertical;
+    }
+    #analysisPanel button {
+      margin-top: 10px;
+      padding: 10px 15px;
+      font-size: 1em;
+      background: #fff;
+      color: #333;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+    }
+    #analysisPanel button:hover {
+      transform: scale(1.05);
+      background: #f0f0f0;
+    }
+    #analysisOutput {
+      margin-top: 15px;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 15px;
+      border-radius: 5px;
+      min-height: 60px;
+      white-space: pre-wrap;
+      font-size: 0.9em;
+    }
+    footer {
+      background: rgba(0, 0, 0, 0.7);
+      text-align: center;
+      padding: 15px;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    موقع شطرنج الرائع
+  </header>
+  <main>
+    <!-- حاوية عرض اللوحة -->
+    <div id="boardContainer">
+      <div id="board"></div>
+    </div>
+    <!-- لوحة عناصر التحكم -->
+    <div id="controls">
+      <button id="newGameBtn">لعبة جديدة</button>
+      <button id="undoMoveBtn">تراجع عن الحركة</button>
+      <select id="botDifficulty">
+        <option value="easy">سهل</option>
+        <option value="medium">متوسط</option>
+        <option value="hard">صعب</option>
+      </select>
+      <button id="playBotBtn">اللعب ضد البوت</button>
+      <button id="analyzeBtn">عرض PGN المباراة</button>
+      <button id="puzzleBtn">ألغاز</button>
+    </div>
+    <!-- لوحة التحليل ورفع PGN -->
+    <div id="analysisPanel">
+      <h2>تحليل المباراة</h2>
+      <textarea id="pgnInput" placeholder="أدخل PGN هنا..."></textarea>
+      <button id="loadPGNBtn">تحميل PGN</button>
+      <div id="analysisOutput"></div>
+    </div>
+  </main>
+  <footer>
+    © 2025 موقع شطرنج. جميع الحقوق محفوظة.
+  </footer>
+  <script>
+    // تهيئة اللعبة واللوحة باستخدام chess.js و chessboard.js
+    var game = new Chess();
+    var board = Chessboard('board', {
+      draggable: true,
+      position: 'start',
+      // تحديد مسار صور القطع من CDN لتظهر بشكل صحيح
+      pieceTheme: 'https://cdnjs.cloudflare.com/ajax/libs/chessboard-js/1.0.0/img/chesspieces/wikipedia/{piece}.png',
+      onDragStart: onDragStart,
+      onDrop: onDrop,
+      onSnapEnd: onSnapEnd
+    });
+
+    // منع سحب القطع عند انتهاء اللعبة أو سحب قطعة الخصم
+    function onDragStart(source, piece, position, orientation) {
+      if (game.game_over()) return false;
+      // اللاعب يلعب بالقطع البيضاء والبوت بالقطع السوداء
+      if (game.turn() === 'w' && piece.search(/^b/) !== -1) return false;
+      if (game.turn() === 'b' && piece.search(/^w/) !== -1) return false;
+    }
+
+    // عند إسقاط القطعة يتم تنفيذ الحركة
+    function onDrop(source, target) {
+      var move = game.move({
+        from: source,
+        to: target,
+        promotion: 'q'
+      });
+      if (move === null) return 'snapback';
+      board.position(game.fen());
+      updateStatus();
+      // إذا حان دور البوت، تنفيذ حركة البوت بعد تأخير بسيط
+      if (isBotTurn()) {
+        setTimeout(makeBotMove, 250);
+      }
+    }
+
+    // تحديث اللوحة بعد انتهاء الحركة
+    function onSnapEnd() {
+      board.position(game.fen());
+    }
+
+    function updateStatus() {
+      console.log("FEN الحالي: " + game.fen());
+    }
+
+    // فرض أن اللاعب يلعب الأبيض والبوت يلعب الأسود
+    function isBotTurn() {
+      return game.turn() === 'b';
+    }
+
+    // تنفيذ حركة البوت بناءً على مستوى الصعوبة
+    function makeBotMove() {
+      if (game.game_over()) return;
+      var difficulty = document.getElementById('botDifficulty').value;
+      var move;
+      if (difficulty === 'easy') {
+        // للمستوى السهل اختيار حركة عشوائية
+        var moves = game.moves();
+        move = moves[Math.floor(Math.random() * moves.length)];
+      } else {
+        // للمستويات المتوسطة والصعبة استخدام خوارزمية minimax بسيطة
+        var searchDepth = (difficulty === 'medium' ? 2 : 3);
+        move = getBestMove(game, searchDepth);
+        if (!move) {
+          var moves = game.moves();
+          move = moves[Math.floor(Math.random() * moves.length)];
+        }
+      }
+      if (move) {
+        game.move(move);
+        board.position(game.fen());
+        updateStatus();
+      }
+    }
+
+    // خوارزمية minimax بسيطة لتقييم الحركات
+    function minimax(gameState, depth, isMaximizing) {
+      if (depth === 0 || gameState.game_over()) {
+        return evaluateBoard(gameState);
+      }
+      var moves = gameState.moves();
+      if (isMaximizing) {
+        var maxEval = -Infinity;
+        for (var i = 0; i < moves.length; i++) {
+          gameState.move(moves[i]);
+          var evaluation = minimax(gameState, depth - 1, false);
+          gameState.undo();
+          maxEval = Math.max(maxEval, evaluation);
+        }
+        return maxEval;
+      } else {
+        var minEval = Infinity;
+        for (var i = 0; i < moves.length; i++) {
+          gameState.move(moves[i]);
+          var evaluation = minimax(gameState, depth - 1, true);
+          gameState.undo();
+          minEval = Math.min(minEval, evaluation);
+        }
+        return minEval;
+      }
+    }
+
+    // اختيار أفضل حركة بناءً على تقييم minimax
+    function getBestMove(gameState, depth) {
+      var moves = gameState.moves();
+      var bestMove = null;
+      var bestEval = -Infinity;
+      for (var i = 0; i < moves.length; i++) {
+        gameState.move(moves[i]);
+        var evaluation = minimax(gameState, depth - 1, false);
+        gameState.undo();
+        if (evaluation > bestEval) {
+          bestEval = evaluation;
+          bestMove = moves[i];
+        }
+      }
+      return bestMove;
+    }
+
+    // دالة تقييم للموقف بناءً على قيمة القطع
+    function evaluateBoard(gameState) {
+      var boardArray = gameState.board();
+      var totalEvaluation = 0;
+      for (var i = 0; i < boardArray.length; i++) {
+        for (var j = 0; j < boardArray[i].length; j++) {
+          var piece = boardArray[i][j];
+          if (piece) {
+            var value = getPieceValue(piece);
+            // القطع البيضاء تسحب التقييم بالسالب والقطع السوداء بالموجب
+            totalEvaluation += (piece.color === 'w' ? -value : value);
+          }
+        }
+      }
+      return totalEvaluation;
+    }
+
+    // قيم القطع الأساسية
+    function getPieceValue(piece) {
+      switch (piece.type) {
+        case 'p': return 1;
+        case 'n': return 3;
+        case 'b': return 3;
+        case 'r': return 5;
+        case 'q': return 9;
+        case 'k': return 0;
+      }
+      return 0;
+    }
+
+    // أحداث عناصر التحكم
+    document.getElementById('newGameBtn').addEventListener('click', function() {
+      game.reset();
+      board.start();
+    });
+
+    document.getElementById('undoMoveBtn').addEventListener('click', function() {
+      game.undo();
+      board.position(game.fen());
+    });
+
+    document.getElementById('playBotBtn').addEventListener('click', function() {
+      if (isBotTurn()) {
+        setTimeout(makeBotMove, 250);
+      } else {
+        alert("ليس دور البوت الآن!");
+      }
+    });
+
+    document.getElementById('analyzeBtn').addEventListener('click', function() {
+      document.getElementById('analysisOutput').textContent = "PGN المباراة:\n" + game.pgn();
+    });
+
+    document.getElementById('loadPGNBtn').addEventListener('click', function() {
+      var pgnText = document.getElementById('pgnInput').value;
+      if (pgnText) {
+        var valid = game.load_pgn(pgnText);
+        if (valid) {
+          board.position(game.fen());
+          alert("تم تحميل PGN بنجاح!");
+        } else {
+          alert("يوجد خطأ في PGN المُدخل.");
+        }
+      } else {
+        alert("يرجى إدخال PGN صحيح.");
+      }
+    });
+
+    document.getElementById('puzzleBtn').addEventListener('click', function() {
+      // لغز بسيط: وضعية يحتاج اللاعب فيها لإيجاد الحركة الأمثل
+      var puzzleFen = "r1bqkbnr/pppppppp/n7/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+      game.load(puzzleFen);
+      board.position(game.fen());
+      alert("حل اللغز: ابحث عن الحركة الأفضل!");
+    });
+  </script>
+</body>
+</html>
